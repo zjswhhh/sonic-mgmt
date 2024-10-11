@@ -29,4 +29,4 @@ docker commit swss docker-orchagent:latest
 /usr/bin/swss.sh stop
 /usr/bin/swss.sh start
 echo "Reload config ..."
-sudo config reload -y
+sudo config reload -f -y

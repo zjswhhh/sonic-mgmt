@@ -168,7 +168,8 @@ class ParseTestbedTopoinfo():
                                     '/')
                             vmconfig[vm]['peer_ipv4'][dut_index].append(peer_ipv4)
                             vmconfig[vm]['ipv4mask'][dut_index].append(ipv4_mask)
-                            vmconfig[vm]['ip_intf'][dut_index].append(intf)
+                            if intf not in vmconfig[vm]['ip_intf'][dut_index]:
+                                vmconfig[vm]['ip_intf'][dut_index].append(intf)
 
                         if (isinstance(topo_definition['configuration'][vm]['interfaces'], dict)
                                 and 'ipv6' in topo_definition['configuration'][vm]['interfaces'][intf]
@@ -178,7 +179,8 @@ class ParseTestbedTopoinfo():
                                     '/')
                             vmconfig[vm]['peer_ipv6'][dut_index].append(ipv6_addr.upper())
                             vmconfig[vm]['ipv6mask'][dut_index].append(ipv6_mask)
-                            vmconfig[vm]['ip_intf'][dut_index].append(intf)
+                            if intf not in vmconfig[vm]['ip_intf'][dut_index]:
+                                vmconfig[vm]['ip_intf'][dut_index].append(intf)
                 # bgp
                 vmconfig[vm]['bgp_asn'] = topo_definition['configuration'][vm]['bgp']['asn']
                 dut_asn = topo_definition['configuration_properties']['common']['dut_asn']

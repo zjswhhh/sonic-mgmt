@@ -1,4 +1,3 @@
-import concurrent.futures
 import logging
 import queue
 import random
@@ -9,7 +8,6 @@ import configs.privatelink_config as pl
 import ptf.testutils as testutils
 import pytest
 from tests.common.helpers.assertions import pytest_assert
-from tests.common.config_reload import config_reload
 from constants import (
     LOCAL_PTF_INTF,
     REMOTE_PTF_RECV_INTF,
@@ -19,7 +17,7 @@ from constants import (
 from gnmi_utils import apply_messages
 from packets import outbound_pl_packets
 from ha_dash_flow_utils import compare_flow_tables
-from ha_utils import verify_ha_state, set_dash_ha_scope
+from ha_utils import verify_ha_state, set_dash_ha_scope, parallel_config_reload_dpuhosts
 
 logger = logging.getLogger(__name__)
 
@@ -93,13 +91,7 @@ def common_setup_teardown(
         apply_messages(localhost, duthost, ptfhost, pl.ENI_ROUTE_GROUP1_CONFIG, dpuhost.dpu_index)
 
     yield
-
-    def _reload(host):
-        logger.info(f"config reload on {host.hostname}")
-        config_reload(host, safe_reload=True, yang_validate=False)
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(dpuhosts)) as executor:
-        list(executor.map(_reload, dpuhosts))
+    parallel_config_reload_dpuhosts(dpuhosts)
 
 
 def _planned_swo_phase(

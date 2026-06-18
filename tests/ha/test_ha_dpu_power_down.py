@@ -5,7 +5,6 @@ import ptf.testutils as testutils
 import pytest
 import time
 import threading
-import concurrent.futures
 from constants import (
     LOCAL_PTF_INTF,
     REMOTE_PTF_RECV_INTF
@@ -13,9 +12,9 @@ from constants import (
 from gnmi_utils import apply_messages
 from packets import outbound_pl_packets
 from tests.common.helpers.assertions import pytest_assert
-from tests.common.config_reload import config_reload
 from ha_dash_flow_utils import compare_flow_tables
 from ha_dpu_utils import dpu_power_off_for_index, dpu_power_on_for_index
+from ha_utils import parallel_config_reload_dpuhosts
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +27,6 @@ pytestmark = [
 TRAFFIC_LOSS_DURATION_CAP = 2.0
 RATE_PPS = 20
 INITIAL_SEND_COUNT = 100
-
-
-def reload_config_for_host(dpuhost):
-    logger.info(f"config reload on {dpuhost.hostname}")
-    config_reload(dpuhost, safe_reload=True, yang_validate=False)
-
 
 @pytest.fixture(autouse=True, scope="function")
 def common_setup_teardown(
@@ -95,9 +88,7 @@ def common_setup_teardown(
         apply_messages(localhost, duthost, ptfhost, pl.ENI_ROUTE_GROUP1_CONFIG, dpuhost.dpu_index)
 
     yield
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(dpuhosts)) as executor:
-        # Map the reload_config_for_host function to the dpuhosts list
-        executor.map(reload_config_for_host, dpuhosts)
+    parallel_config_reload_dpuhosts(dpuhosts)
 
 
 """

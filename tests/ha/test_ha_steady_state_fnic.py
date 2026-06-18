@@ -1,6 +1,5 @@
 import logging
 import random
-import concurrent.futures
 
 import configs.privatelink_config as pl
 import ptf.packet as scapy
@@ -10,9 +9,9 @@ from tests.common.helpers.assertions import pytest_assert
 from constants import LOCAL_PTF_INTF, REMOTE_PTF_RECV_INTF, REMOTE_PTF_SEND_INTF
 from gnmi_utils import apply_messages
 from packets import inbound_pl_packets, outbound_pl_packets
-from tests.common.config_reload import config_reload
 from tests.common.dash_utils import verify_tunnel_packets
 from ha_dash_flow_utils import compare_flow_tables_pdsctl
+from ha_utils import parallel_config_reload_dpuhosts
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +22,6 @@ pytestmark = [
 
 
 NUM_PACKETS = 5
-
-
-def reload_config_for_host(dpuhost):
-    logger.info(f"config reload on {dpuhost.hostname}")
-    config_reload(dpuhost, safe_reload=True, yang_validate=False)
-
 
 def _build_fnic_pkt_set(config, encap_proto, ptfadapter):
     """Build a list of NUM_PACKETS bidirectional fnic packet tuples for a given DPU config."""
@@ -113,8 +106,7 @@ def common_setup_teardown(
         apply_messages(localhost, duthost, ptfhost, pl.ENI_ROUTE_GROUP1_CONFIG, dpuhost.dpu_index)
 
     yield
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(dpuhosts)) as executor:
-        executor.map(reload_config_for_host, dpuhosts)
+    parallel_config_reload_dpuhosts(dpuhosts)
 
 
 @pytest.mark.parametrize("encap_proto", ["vxlan", "gre"])

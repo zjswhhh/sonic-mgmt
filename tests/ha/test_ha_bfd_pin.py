@@ -12,10 +12,15 @@ from constants import (
 )
 from gnmi_utils import apply_messages
 from packets import outbound_pl_packets
-from tests.common.config_reload import config_reload
 from tests.common.helpers.assertions import pytest_assert
 from ha_dash_flow_utils import compare_flow_tables_pdsctl
-from ha_utils import bfd_pin_primary, bfd_unpin_primary, bfd_pin_both_sides, bfd_unpin_both_sides
+from ha_utils import (
+    bfd_pin_primary,
+    bfd_unpin_primary,
+    bfd_pin_both_sides,
+    bfd_unpin_both_sides,
+    parallel_config_reload_dpuhosts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +92,7 @@ def common_setup_teardown(
         apply_messages(localhost, duthost, ptfhost, pl.ENI_ROUTE_GROUP1_CONFIG, dpuhost.dpu_index)
 
     yield
-    for dpuhost in dpuhosts:
-        logger.info(f"config reload on {dpuhost.hostname}")
-        config_reload(dpuhost, safe_reload=True, yang_validate=False)
+    parallel_config_reload_dpuhosts(dpuhosts)
 
 
 """
